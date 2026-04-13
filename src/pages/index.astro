@@ -1,0 +1,464 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Nav from '../components/Nav.astro';
+const base = import.meta.env.BASE_URL;
+
+const cities = [
+  {
+    name: 'Porto',
+    slug: 'porto',
+    dates: 'Aug 22–27',
+    nights: '5 nights',
+    tagline: 'Baroque towers, port wine cellars & the golden Douro',
+    accent: '#1B3A6B',
+    accentLight: '#E8EFF9',
+    emoji: '🍷',
+  },
+  {
+    name: 'Lisbon',
+    slug: 'lisbon',
+    dates: 'Aug 27 – Sep 1',
+    nights: '5 nights',
+    tagline: 'Hilltop castles, tram rides & pastéis de Belém',
+    accent: '#2D6A4F',
+    accentLight: '#E6F4ED',
+    emoji: '🚋',
+  },
+  {
+    name: 'Aveiro',
+    slug: 'aveiro',
+    dates: 'Sep 1–5',
+    nights: '4 nights',
+    tagline: 'Painted canals, moliceiro boats & ovos moles',
+    accent: '#B5560A',
+    accentLight: '#FAEAE5',
+    emoji: '🚣',
+  },
+];
+
+const stats = [
+  { num: '14', label: 'Nights' },
+  { num: '3', label: 'Cities' },
+  { num: '~14h', label: 'YVR → OPO' },
+  { num: 'Aug', label: 'Peak summer' },
+];
+
+const tipCategories = [
+  {
+    label: 'Money & Payments',
+    tips: [
+      { icon: '💶', title: 'Currency', body: 'Portugal uses the Euro (€). ATMs (called "Multibanco") are everywhere and offer the best exchange rates. Withdraw in Euros — always decline the ATM\'s conversion offer to avoid poor rates.' },
+      { icon: '💳', title: 'Cards vs cash', body: 'Credit and debit cards (Visa, Mastercard) are widely accepted at restaurants, hotels, shops, and supermarkets. Contactless payments work almost everywhere. Carry a small amount of cash (€30–50) for markets, street vendors, small cafés, and tipping.' },
+      { icon: '🪙', title: 'Tipping culture', body: 'Tipping is appreciated but not expected. In restaurants, rounding up or leaving 5–10% is generous. For cafés, leave loose change. Taxi drivers appreciate rounding up to the nearest Euro. Hotel housekeeping: €1–2/day is a kind gesture.' },
+      { icon: '📊', title: 'Budget estimate', body: 'Mid-range families should budget roughly €250–350/day covering accommodation, dining out, entry fees, and local transport. Lisbon is the most expensive; Aveiro is the most affordable.' },
+    ],
+  },
+  {
+    label: 'Weather & Packing',
+    tips: [
+      { icon: '🌡️', title: 'August–September weather', body: 'Late August averages 25–33°C in Porto and Lisbon, dropping slightly in September. Aveiro is a few degrees cooler thanks to the Atlantic breeze. Rain is very rare but not impossible — maybe one brief shower across two weeks.' },
+      { icon: '👕', title: 'What to pack', body: 'Light, breathable clothing (cotton/linen). Comfortable walking shoes — Porto and Lisbon are hilly with cobblestones. A light layer for air-conditioned museums and cooler evenings. Swimwear for Matosinhos and Costa Nova beaches.' },
+      { icon: '☀️', title: 'Sun protection', body: 'The UV index is high (8–10) in August. Pack sunscreen SPF 50, sunglasses, and hats for the whole family. Reapply after every swim. Carry refillable water bottles — tap water is safe to drink throughout Portugal.' },
+      { icon: '🎒', title: 'Day bag essentials', body: 'A small daypack with water, sunscreen, snacks for kids, a portable charger, and a light rain jacket. Porto and Lisbon involve a lot of walking uphill — pack light each day.' },
+    ],
+  },
+  {
+    label: 'Getting Around',
+    tips: [
+      { icon: '✈️', title: 'Flights', body: 'Flying Vancouver (YVR) to Porto (OPO), roughly 14 hours with one connection. Direct flights are not available — common layovers include London, Paris, or Lisbon. Book early for August; families should aim for seats together.' },
+      { icon: '🚆', title: 'Inter-city trains', body: 'Alfa Pendular (fast) and Intercidades (IC) trains connect Porto, Lisbon, and Aveiro comfortably. Porto to Lisbon: ~3 hrs on Alfa Pendular. Lisbon to Aveiro: ~2 hrs 20 min on IC. Aveiro to Porto: ~1 hr. Book at cp.pt — tickets go on sale 60 days ahead.' },
+      { icon: '🚇', title: 'City public transit', body: 'Porto: use the Andante card for metro, buses, and some trains. Lisbon: use the Viva Viagem card for metro, buses, trams, and ferries. Both cards cost €0.50 and can be loaded with trips or day passes. Aveiro is walkable — no transit card needed.' },
+      { icon: '🚕', title: 'Taxis & rideshare', body: 'Bolt and Uber are widely available in Porto and Lisbon and are often cheaper than taxis. Short rides in the city centre cost €4–8. Taxis use meters — ensure the meter is running. From Porto airport to the city centre: ~€25 by taxi, ~€15 by Uber/Bolt.' },
+      { icon: '🚶', title: 'Walking', body: 'Porto and Lisbon are best explored on foot, but both are very hilly. Wear sturdy shoes on the cobblestones. In Lisbon, the Glória and Bica funiculars save steep climbs. Aveiro is flat and compact — everything is within a 15-minute walk.' },
+    ],
+  },
+  {
+    label: 'Practical Tips',
+    tips: [
+      { icon: '🎫', title: 'Book in advance', body: 'Oceanário, Castelo de São Jorge, Sintra palaces, and top restaurants all fill fast in August. Reserve as soon as possible. Salpoente and DAMA pé de cabra in particular book out weeks ahead.' },
+      { icon: '🏠', title: 'Where to stay', body: 'Porto: Ribeira or Bonfim. Lisbon: Chiado, Alfama, or Mouraria. Aveiro: city centre near the canals. All are walkable bases with family-friendly options at every budget level.' },
+      { icon: '🍽️', title: 'Dining culture', body: 'Lunch is 1–3pm, dinner rarely before 7:30pm. "Menu do dia" (set lunch) is excellent value at €8–12. Couvert (bread, olives, and starters brought to your table) is charged extra — you can decline it. Kids\' menus are uncommon but portions are large enough to share.' },
+      { icon: '🔌', title: 'Power & connectivity', body: 'Portugal uses Type F plugs (European two-pin round, 230V). Bring a universal adapter. Free Wi-Fi is widely available at hotels, cafés, and restaurants. Consider an eSIM or local SIM for data — coverage is excellent nationwide.' },
+      { icon: '🗣️', title: 'Language', body: 'Portuguese is the official language. English is widely spoken in tourist areas, hotels, and restaurants — especially by younger staff. Learning a few words (obrigado/obrigada, por favor, bom dia) is always appreciated and goes a long way.' },
+      { icon: '🏥', title: 'Safety & health', body: 'Portugal is very safe for families. Tap water is safe to drink. EU health cards (EHIC/GHIC) are accepted; Canadians should have travel insurance. Pharmacies (farmácias) are well-stocked and pharmacists can advise on minor ailments without a doctor visit.' },
+    ],
+  },
+];
+---
+
+<Layout title="Overview">
+  <Nav active="home" />
+
+  <!-- Hero -->
+  <header class="hero tile-pattern">
+    <div class="hero-inner">
+      <p class="hero-eyebrow fade-up">Family of Four · August 2026</p>
+      <h1 class="hero-title fade-up delay-1">Portugal</h1>
+      <p class="hero-subtitle fade-up delay-2">
+        14 nights across Porto, Lisbon & Aveiro —<br />wine, tiles, custard tarts & painted canals.
+      </p>
+      <div class="hero-stats fade-up delay-3">
+        {stats.map(s => (
+          <div class="stat">
+            <span class="stat-num">{s.num}</span>
+            <span class="stat-label">{s.label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+    <div class="hero-scroll-hint">scroll ↓</div>
+  </header>
+
+  <main>
+    <!-- Route overview -->
+    <section class="section">
+      <div class="container">
+        <div class="section-label">The Route</div>
+        <h2 class="section-title">Three cities, one unforgettable trip</h2>
+        <p class="section-intro">
+          Flying Vancouver → Porto, working south through Lisbon, then east to the canal city of Aveiro before looping back to Porto for the return flight home.
+        </p>
+
+        <div class="city-cards">
+          {cities.map((city, i) => (
+            <a href={`${base}${city.slug}/`} class="city-card" style={`--accent: ${city.accent}; --accent-light: ${city.accentLight};`}>
+              <div class="city-card-number" style={`color: ${city.accent}; border-color: ${city.accent}22`}>0{i+1}</div>
+              <div class="city-card-body">
+                <div class="city-card-header">
+                  <h3 class="city-card-name">{city.name}</h3>
+                  <span class="city-card-dates">{city.dates} · {city.nights}</span>
+                </div>
+                <p class="city-card-tagline">{city.tagline}</p>
+              </div>
+              <span class="city-card-arrow" style={`color: ${city.accent}`}>→</span>
+            </a>
+          ))}
+        </div>
+
+        <!-- Route line -->
+        <div class="route-bar">
+          <div class="route-step">
+            <div class="route-dot route-dot-yv"></div>
+            <span>Vancouver YVR</span>
+          </div>
+          <div class="route-line"></div>
+          <div class="route-step">
+            <div class="route-dot" style="background: #1B3A6B"></div>
+            <span>Porto</span>
+          </div>
+          <div class="route-line"></div>
+          <div class="route-step">
+            <div class="route-dot" style="background: #2D6A4F"></div>
+            <span>Lisbon</span>
+          </div>
+          <div class="route-line"></div>
+          <div class="route-step">
+            <div class="route-dot" style="background: #B5560A"></div>
+            <span>Aveiro</span>
+          </div>
+          <div class="route-line"></div>
+          <div class="route-step">
+            <div class="route-dot route-dot-yv"></div>
+            <span>Vancouver YVR</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tips -->
+    <section class="section section-alt">
+      <div class="container">
+        <div class="section-label">Before You Go</div>
+        <h2 class="section-title">Travel tips</h2>
+        <p class="section-intro">Everything you need to know before the trip — money, weather, transport, and practical essentials.</p>
+
+        {tipCategories.map(cat => (
+          <div class="tip-category">
+            <h3 class="tip-category-title">{cat.label}</h3>
+            <div class="tips-grid">
+              {cat.tips.map(t => (
+                <div class="tip-card">
+                  <span class="tip-icon">{t.icon}</span>
+                  <h3 class="tip-title">{t.title}</h3>
+                  <p class="tip-body">{t.body}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container footer-inner">
+      <p class="footer-text">🇵🇹 Portugal Family Trip · August 2026</p>
+      <p class="footer-sub">Built with Astro · Hosted on GitHub Pages</p>
+    </div>
+  </footer>
+</Layout>
+
+<style>
+  /* Hero */
+  .hero {
+    min-height: 92vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 6rem 2rem 3rem;
+    position: relative;
+    border-bottom: 1px solid var(--cream-dark);
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 70% 60% at 50% 50%, rgba(191,139,58,0.08), transparent);
+    pointer-events: none;
+  }
+  .hero-inner {
+    max-width: 700px;
+    position: relative;
+    z-index: 1;
+  }
+  .hero-eyebrow {
+    font-size: 0.8rem;
+    font-weight: 400;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 1.25rem;
+    opacity: 0;
+  }
+  .hero-title {
+    font-family: var(--font-display);
+    font-size: clamp(5rem, 16vw, 11rem);
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    line-height: 0.9;
+    margin-bottom: 1.5rem;
+    opacity: 0;
+  }
+  .hero-subtitle {
+    font-size: 1.05rem;
+    font-weight: 300;
+    color: var(--ink-muted);
+    line-height: 1.7;
+    margin-bottom: 2.5rem;
+    opacity: 0;
+  }
+  .hero-stats {
+    display: flex;
+    gap: 2.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    opacity: 0;
+  }
+  .stat { display: flex; flex-direction: column; align-items: center; gap: 0.15rem; }
+  .stat-num {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 400;
+    color: var(--ink);
+    line-height: 1;
+  }
+  .stat-label {
+    font-size: 0.72rem;
+    font-weight: 400;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .hero-scroll-hint {
+    position: absolute;
+    bottom: 2rem;
+    font-size: 0.72rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    animation: bob 2s ease-in-out infinite;
+  }
+  @keyframes bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(4px); }
+  }
+
+  /* Sections */
+  .section { padding: 5rem 2rem; }
+  .section-alt { background: white; }
+  .container { max-width: 1100px; margin: 0 auto; }
+  .section-label {
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 0.75rem;
+  }
+  .section-title {
+    font-family: var(--font-display);
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 300;
+    color: var(--ink);
+    margin-bottom: 1rem;
+  }
+  .section-intro {
+    font-size: 1rem;
+    color: var(--ink-muted);
+    max-width: 600px;
+    margin-bottom: 3rem;
+    line-height: 1.75;
+  }
+
+  /* City cards */
+  .city-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-bottom: 3rem;
+    border: 1px solid var(--cream-dark);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  .city-card {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1.5rem 1.75rem;
+    background: white;
+    border-bottom: 1px solid var(--cream-dark);
+    cursor: pointer;
+    transition: background 0.2s;
+    position: relative;
+  }
+  .city-card:last-child { border-bottom: none; }
+  .city-card:hover { background: var(--accent-light); }
+  .city-card-number {
+    font-family: var(--font-display);
+    font-size: 1.8rem;
+    font-weight: 300;
+    border-right: 1px solid;
+    padding-right: 1.25rem;
+    min-width: 3.5rem;
+    line-height: 1;
+  }
+  .city-card-body { flex: 1; }
+  .city-card-header {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    margin-bottom: 0.25rem;
+    flex-wrap: wrap;
+  }
+  .city-card-name {
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    font-weight: 500;
+    color: var(--ink);
+  }
+  .city-card-dates { font-size: 0.8rem; color: var(--ink-faint); }
+  .city-card-tagline { font-size: 0.9rem; color: var(--ink-muted); }
+  .city-card-arrow {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    transition: transform 0.2s;
+  }
+  .city-card:hover .city-card-arrow { transform: translateX(4px); }
+
+  /* Route bar */
+  .route-bar {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 1.5rem;
+    background: white;
+    border: 1px solid var(--cream-dark);
+    border-radius: var(--radius-lg);
+  }
+  .route-step {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--ink-muted);
+    font-weight: 400;
+  }
+  .route-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .route-dot-yv { background: var(--ink-faint); }
+  .route-line {
+    flex: 1;
+    height: 1px;
+    background: var(--cream-dark);
+    min-width: 20px;
+  }
+
+  /* Tips */
+  .tip-category {
+    margin-bottom: 2.5rem;
+  }
+  .tip-category:last-child { margin-bottom: 0; }
+  .tip-category-title {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--cream-dark);
+  }
+  .tips-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.25rem;
+  }
+  .tip-card {
+    padding: 1.5rem;
+    border: 1px solid var(--cream-dark);
+    border-radius: var(--radius-lg);
+    background: var(--cream);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .tip-icon { font-size: 1.5rem; }
+  .tip-title {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 500;
+    color: var(--ink);
+  }
+  .tip-body { font-size: 0.875rem; color: var(--ink-muted); line-height: 1.65; }
+
+  /* Footer */
+  footer {
+    border-top: 1px solid var(--cream-dark);
+    padding: 2rem;
+  }
+  .footer-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    text-align: center;
+  }
+  .footer-text { font-family: var(--font-display); font-size: 1rem; color: var(--ink-muted); }
+  .footer-sub { font-size: 0.75rem; color: var(--ink-faint); }
+
+  @media (max-width: 600px) {
+    .hero { min-height: 80vh; }
+    .hero-stats { gap: 1.5rem; }
+    .route-bar { flex-direction: column; align-items: flex-start; }
+    .route-line { width: 1px; height: 16px; min-width: 1px; }
+    .city-card-number { font-size: 1.3rem; }
+  }
+</style>
