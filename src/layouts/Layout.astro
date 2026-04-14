@@ -27,19 +27,22 @@ const base = import.meta.env.BASE_URL;
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --cream: #F8F4EE;
-    --cream-dark: #EDE7DC;
+    --cream: #FAF7F2;
+    --cream-dark: #EDE8DF;
     --ink: #1C1917;
-    --ink-muted: #6B6560;
+    --ink-muted: #5C5550;
     --ink-faint: #9E9890;
     --blue: #1B3A6B;
     --blue-light: #E8EFF9;
-    --gold: #BF8B3A;
-    --gold-light: #FDF3E0;
-    --terra: #C85A38;
-    --terra-light: #FAEAE5;
-    --green: #2D6A4F;
-    --green-light: #E6F4ED;
+    --gold: #C9981A;
+    --gold-light: #FDF4D8;
+    --terra: #C62D2D;
+    --terra-light: #FBEAEA;
+    --green: #006B3F;
+    --green-light: #E2F3EB;
+    --pt-red: #C62D2D;
+    --pt-green: #006B3F;
+    --pt-yellow: #D4A629;
     --font-display: 'Cormorant Garamond', Georgia, serif;
     --font-body: 'Jost', system-ui, sans-serif;
     --radius: 4px;
@@ -70,8 +73,8 @@ const base = import.meta.env.BASE_URL;
   /* Tile pattern */
   .tile-pattern {
     background-image:
-      repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(27,58,107,0.04) 10px, rgba(27,58,107,0.04) 11px),
-      repeating-linear-gradient(-45deg, transparent, transparent 10px, rgba(27,58,107,0.04) 10px, rgba(27,58,107,0.04) 11px);
+      repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,107,63,0.04) 10px, rgba(0,107,63,0.04) 11px),
+      repeating-linear-gradient(-45deg, transparent, transparent 10px, rgba(198,45,45,0.03) 10px, rgba(198,45,45,0.03) 11px);
   }
 
   /* Animations */
@@ -128,10 +131,13 @@ const base = import.meta.env.BASE_URL;
     color: var(--ink-muted);
     transition: color 0.2s, background 0.2s;
   }
-  .nav-links a:hover,
-  .nav-links a.active {
+  .nav-links a:hover {
     color: var(--ink);
     background: var(--cream-dark);
+  }
+  .nav-links a.active {
+    color: var(--pt-green);
+    background: var(--green-light);
   }
 
   /* Responsive nav */

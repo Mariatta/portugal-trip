@@ -6,10 +6,12 @@ Built with [Astro](https://astro.build) and hosted on GitHub Pages.
 
 ## Pages
 
-- `/` — Trip overview, route, and family travel tips
-- `/porto/` — 5 nights: hotels, restaurants & day-by-day itinerary
-- `/lisbon/` — 5 nights: hotels, restaurants & day-by-day itinerary
-- `/aveiro/` — 3 nights: hotels, restaurants & day-by-day itinerary
+- `/` — Trip overview, route, and travel tips
+- `/porto/` — 5 nights: hotels, restaurants, map & day-by-day itinerary
+- `/lisbon/` — 5 nights: hotels, restaurants, map & day-by-day itinerary
+- `/aveiro/` — 4 nights: hotels, restaurants, map & day-by-day itinerary
+- `/checklist/` — Planning checklist with progress tracking
+- `/about/` — How this site was built with AI
 
 ## Getting started
 
@@ -26,7 +28,7 @@ Before deploying, edit `astro.config.mjs`:
 
 ```js
 export default defineConfig({
-  site: 'https://YOUR_USERNAME.github.io',
+  site: 'https://mariatta.github.io',
   base: '/portugal-trip', // change to match your repo name
 });
 ```
@@ -36,7 +38,7 @@ export default defineConfig({
 1. Push this repo to GitHub
 2. Go to **Settings → Pages → Source** and select **GitHub Actions**
 3. The `.github/workflows/deploy.yml` workflow triggers on every push to `main`
-4. Your site goes live at `https://YOUR_USERNAME.github.io/portugal-trip/`
+4. Your site goes live at `https://mariatta.github.io/portugal-trip/`
 
 ## Editing content
 

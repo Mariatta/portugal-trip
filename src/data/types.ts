@@ -35,6 +35,21 @@ export interface Day {
   activities: Activity[];
 }
 
+export interface ChecklistItem {
+  id: string;
+  label: string;
+  note?: string;
+  dueBy?: string;
+  url?: string;
+}
+
+export interface ChecklistCategory {
+  id: string;
+  title: string;
+  emoji: string;
+  items: ChecklistItem[];
+}
+
 export interface MapPoint {
   name: string;
   type: 'attraction' | 'hotel' | 'restaurant';

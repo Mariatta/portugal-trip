@@ -5,7 +5,7 @@ import { defineConfig } from 'astro/config';
 // If you're using a custom domain or username.github.io repo, use base: '/'
 
 export default defineConfig({
-  site: 'https://YOUR_USERNAME.github.io',
+  site: 'https://mariatta.github.io',
   base: '/portugal-trip',
   output: 'static',
   trailingSlash: 'always',
