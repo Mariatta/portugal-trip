@@ -1,0 +1,1566 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Nav from '../components/Nav.astro';
+import { budgetData } from '../data/budget';
+
+const preTripCategories = budgetData.filter(c => c.type === 'pre-trip');
+const duringTripCategories = budgetData.filter(c => c.type === 'during-trip');
+---
+
+<Layout title="Travel Budget" description="Track your Portugal trip budget — planned expenses and actual spending">
+  <Nav active="budget" />
+
+  <header class="budget-hero">
+    <div class="budget-hero-inner">
+      <p class="budget-eyebrow">Financial Planning</p>
+      <h1 class="budget-title">Travel Budget</h1>
+      <p class="budget-subtitle">Plan your expenses and track actual spending during the trip.</p>
+
+      <div class="currency-controls">
+        <div class="currency-toggle">
+          <span class="currency-toggle-label">Display in</span>
+          <button type="button" class="currency-btn active" id="btn-cad" data-currency="CAD">CAD $</button>
+          <button type="button" class="currency-btn" id="btn-eur" data-currency="EUR">EUR €</button>
+        </div>
+        <div class="exchange-rate-group">
+          <label for="exchange-rate">1 EUR =</label>
+          <input type="number" id="exchange-rate" value="1.53" min="0.01" step="0.01" />
+          <span>CAD</span>
+        </div>
+      </div>
+
+      <div class="budget-summary">
+        <div class="summary-card">
+          <span class="summary-label">Estimated Total</span>
+          <span class="summary-value" id="total-estimated">—</span>
+        </div>
+        <div class="summary-card">
+          <span class="summary-label">Actual Spent</span>
+          <span class="summary-value" id="total-actual">—</span>
+        </div>
+        <div class="summary-card">
+          <span class="summary-label">Remaining</span>
+          <span class="summary-value" id="total-remaining">—</span>
+        </div>
+      </div>
+
+      <div class="progress-container">
+        <div class="progress-bar">
+          <div class="progress-fill" id="budget-progress"></div>
+        </div>
+        <p class="progress-text" id="budget-progress-text">0% of budget spent</p>
+      </div>
+    </div>
+  </header>
+
+  <nav class="budget-subnav">
+    <div class="subnav-inner">
+      <a href="#pre-trip" class="subnav-link">Pre-trip Estimates</a>
+      <a href="#during-trip" class="subnav-link">During-trip Estimates</a>
+      <a href="#expense-log" class="subnav-link">Log Expense</a>
+      <a href="#expense-details" class="subnav-link">Expense Details</a>
+      <a href="#charts" class="subnav-link">Charts</a>
+    </div>
+  </nav>
+
+  <main>
+    <!-- Pre-trip Expenses -->
+    <div class="phase-header" id="pre-trip">
+      <div class="container">
+        <h2 class="phase-title">Pre-trip Expenses</h2>
+        <p class="phase-subtitle">Fixed costs to book and pay before departure</p>
+      </div>
+    </div>
+
+    {preTripCategories.map((cat, i) => (
+      <section class={`section ${i % 2 === 0 ? '' : 'section-alt'}`}>
+        <div class="container">
+          <div class="category-header">
+            <span class="category-emoji">{cat.emoji}</span>
+            <h3 class="category-title">{cat.title}</h3>
+            <span class="category-amounts">
+              <span class="category-estimated" data-cat-id={cat.id}>Est: —</span>
+              <span class="category-actual" data-cat-actual={cat.id}>Actual: —</span>
+            </span>
+          </div>
+          <div class="budget-items">
+            {cat.items.map(item => (
+              <div class="budget-row" data-item-id={item.id} data-estimated={item.estimated} data-item-currency={item.currency} data-cat={cat.id}>
+                <div class="budget-item-info">
+                  <span class="budget-label">{item.label}</span>
+                  {item.note && <span class="budget-note">{item.note}</span>}
+                </div>
+                <div class="budget-amounts">
+                  <div class="amount-group">
+                    <span class="amount-label">Estimated</span>
+                    <span class="amount-value item-estimated" data-item-est={item.id}>{item.currency === 'CAD' ? '$' : '€'}{item.estimated.toLocaleString()}</span>
+                  </div>
+                  <div class="amount-group">
+                    <span class="amount-label">Actual</span>
+                    <span class="amount-value item-actual" data-item-actual={item.id}>—</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+            <div class="budget-expenses-dynamic" data-cat-expenses={cat.id}></div>
+          </div>
+        </div>
+      </section>
+    ))}
+
+    <!-- During-trip Expenses -->
+    <div class="phase-header" id="during-trip">
+      <div class="container">
+        <h2 class="phase-title">During-trip Expenses</h2>
+        <p class="phase-subtitle">Variable costs to track while traveling</p>
+      </div>
+    </div>
+
+    {duringTripCategories.map((cat, i) => (
+      <section class={`section ${i % 2 === 0 ? '' : 'section-alt'}`}>
+        <div class="container">
+          <div class="category-header">
+            <span class="category-emoji">{cat.emoji}</span>
+            <h3 class="category-title">{cat.title}</h3>
+            <span class="category-amounts">
+              <span class="category-estimated" data-cat-id={cat.id}>Est: —</span>
+              <span class="category-actual" data-cat-actual={cat.id}>Actual: —</span>
+            </span>
+          </div>
+          <div class="budget-items">
+            {cat.items.map(item => (
+              <div class="budget-row" data-item-id={item.id} data-estimated={item.estimated} data-item-currency={item.currency} data-cat={cat.id}>
+                <div class="budget-item-info">
+                  <span class="budget-label">{item.label}</span>
+                  {item.note && <span class="budget-note">{item.note}</span>}
+                </div>
+                <div class="budget-amounts">
+                  <div class="amount-group">
+                    <span class="amount-label">Estimated</span>
+                    <span class="amount-value item-estimated" data-item-est={item.id}>{item.currency === 'CAD' ? '$' : '€'}{item.estimated.toLocaleString()}</span>
+                  </div>
+                  <div class="amount-group">
+                    <span class="amount-label">Actual</span>
+                    <span class="amount-value item-actual" data-item-actual={item.id}>—</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+            <div class="budget-expenses-dynamic" data-cat-expenses={cat.id}></div>
+          </div>
+        </div>
+      </section>
+    ))}
+
+    <!-- Expense Log -->
+    <div class="phase-header" id="expense-log">
+      <div class="container">
+        <h2 class="phase-title">Log Expense</h2>
+        <p class="phase-subtitle">Log individual purchases during the trip</p>
+      </div>
+    </div>
+
+    <section class="section">
+      <div class="container">
+        <form id="expense-form" class="expense-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="expense-desc">Description</label>
+              <input type="text" id="expense-desc" placeholder="e.g. Lunch at Café Majestic" required />
+            </div>
+            <div class="form-group form-group-small">
+              <label for="expense-amount">Amount</label>
+              <input type="number" id="expense-amount" placeholder="0.00" min="0" step="0.01" required />
+            </div>
+            <div class="form-group form-group-small">
+              <label for="expense-currency">Currency</label>
+              <select id="expense-currency">
+                <option value="EUR">EUR €</option>
+                <option value="CAD">CAD $</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="expense-category">Category</label>
+              <select id="expense-category">
+                {budgetData.map(cat => (
+                  <option value={cat.id}>{cat.emoji} {cat.title}</option>
+                ))}
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="expense-item">Budget Item</label>
+              <select id="expense-item">
+                <option value="">— Any —</option>
+              </select>
+            </div>
+            <div class="form-group form-group-small">
+              <label for="expense-city">City</label>
+              <select id="expense-city">
+                <option value="">—</option>
+                <option value="Porto">Porto</option>
+                <option value="Lisbon">Lisbon</option>
+                <option value="Aveiro">Aveiro</option>
+              </select>
+            </div>
+            <div class="form-group form-group-small">
+              <label for="expense-date">Date</label>
+              <input type="date" id="expense-date" />
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-add" id="btn-submit">Add Expense</button>
+            <button type="button" class="btn-cancel" id="btn-cancel" style="display:none;">Cancel</button>
+          </div>
+        </form>
+
+        <h3 class="expense-details-title" id="expense-details">Expense Details</h3>
+        <div id="expense-list" class="expense-list"></div>
+        <p class="expense-total">Logged expenses total: <strong id="expense-log-total">€0</strong></p>
+      </div>
+    </section>
+    <!-- Charts -->
+    <div class="phase-header" id="charts">
+      <div class="container">
+        <h2 class="phase-title">Budget Charts</h2>
+        <p class="phase-subtitle">Visual breakdown of your trip finances</p>
+      </div>
+    </div>
+
+    <section class="section">
+      <div class="container">
+        <div class="charts-grid">
+          <div class="chart-card">
+            <h3 class="chart-title">Estimated vs Actual by Category</h3>
+            <div class="chart-wrapper chart-wrapper-bar">
+              <canvas id="chart-est-vs-actual"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <h3 class="chart-title">Spending by Category</h3>
+            <div class="chart-wrapper">
+              <canvas id="chart-by-category"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <h3 class="chart-title">Spending by City</h3>
+            <div class="chart-wrapper">
+              <canvas id="chart-by-city"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Floating add button -->
+  <a href={`${import.meta.env.BASE_URL}log/`} class="fab" title="Log an expense">+</a>
+
+  <footer>
+    <div class="container footer-inner">
+      <p class="footer-text">🇵🇹 Portugal Trip for Mariatta's Family · August 2026</p>
+      <p class="footer-sub">Built with Astro · Hosted on <a href="https://github.com/Mariatta/portugal-trip" target="_blank" rel="noopener">GitHub Pages</a></p>
+    </div>
+  </footer>
+</Layout>
+
+<script is:inline src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script is:inline define:vars={{ budgetDataJSON: JSON.stringify(budgetData.map(c => ({ id: c.id, title: c.title, emoji: c.emoji, items: c.items.map(i => ({ id: i.id, label: i.label, estimated: i.estimated, currency: i.currency })) }))) }}>
+(function() {
+  var EXPENSES_KEY = 'portugal-budget-expenses-2026';
+  var RATE_KEY = 'portugal-budget-rate-2026';
+  var DISPLAY_KEY = 'portugal-budget-display-currency';
+  var BUDGET_DATA = JSON.parse(budgetDataJSON);
+  var editingId = null;
+  var displayCurrency = localStorage.getItem(DISPLAY_KEY) || 'CAD';
+  var exchangeRate = parseFloat(localStorage.getItem(RATE_KEY)) || 1.53;
+
+  function loadExpenses() {
+    try { return JSON.parse(localStorage.getItem(EXPENSES_KEY) || '[]'); }
+    catch { return []; }
+  }
+
+  function saveExpenses(data) {
+    localStorage.setItem(EXPENSES_KEY, JSON.stringify(data));
+  }
+
+  // Convert an amount to the display currency
+  // fromCurrency: 'CAD' or 'EUR', the native currency of the amount
+  function toDisplay(amount, fromCurrency) {
+    if (fromCurrency === displayCurrency) return amount;
+    if (displayCurrency === 'CAD') return amount * exchangeRate; // EUR -> CAD
+    return amount / exchangeRate; // CAD -> EUR
+  }
+
+  function sym() { return displayCurrency === 'CAD' ? '$' : '€'; }
+
+  function fmtAmount(amount, fromCurrency) {
+    var converted = toDisplay(amount, fromCurrency);
+    return sym() + converted.toFixed(2);
+  }
+
+  function fmtRound(amount, fromCurrency) {
+    var converted = toDisplay(amount, fromCurrency);
+    return sym() + Math.round(converted).toLocaleString();
+  }
+
+  function updateTotals() {
+    var totalEstimated = 0;
+
+    // Sum estimated totals, converting each item to display currency
+    BUDGET_DATA.forEach(function(cat) {
+      cat.items.forEach(function(item) {
+        totalEstimated += toDisplay(item.estimated, item.currency);
+      });
+    });
+
+    // Sum expenses from the log, grouped by category and item
+    var expenses = loadExpenses();
+    var expenseByCat = {};      // in display currency
+    var expenseByCatNative = {}; // in native currency for raw grouping
+    var expenseByItem = {};     // in display currency
+    var expenseByItemNative = {}; // native amounts per item
+    var totalActual = 0;
+    expenses.forEach(function(e) {
+      var amt = e.amount || 0;
+      var cur = e.currency || 'EUR';
+      var displayAmt = toDisplay(amt, cur);
+      totalActual += displayAmt;
+      if (!expenseByCat[e.category]) expenseByCat[e.category] = 0;
+      expenseByCat[e.category] += displayAmt;
+      if (e.itemId) {
+        if (!expenseByItem[e.itemId]) expenseByItem[e.itemId] = 0;
+        expenseByItem[e.itemId] += displayAmt;
+        if (!expenseByItemNative[e.itemId]) expenseByItemNative[e.itemId] = { amount: 0, currency: cur };
+        expenseByItemNative[e.itemId].amount += amt;
+      }
+    });
+
+    var elLogTotal = document.getElementById('expense-log-total');
+    if (elLogTotal) elLogTotal.textContent = sym() + totalActual.toFixed(2);
+
+    // Update per-item estimated displays (convert to display currency)
+    document.querySelectorAll('.item-estimated').forEach(function(el) {
+      var itemId = el.getAttribute('data-item-est');
+      var row = el.closest('.budget-row');
+      var est = parseFloat(row.getAttribute('data-estimated')) || 0;
+      var cur = row.getAttribute('data-item-currency') || 'EUR';
+      el.textContent = fmtRound(est, cur);
+    });
+
+    // Update per-item actual displays
+    document.querySelectorAll('.item-actual').forEach(function(el) {
+      var itemId = el.getAttribute('data-item-actual');
+      var actual = expenseByItem[itemId] || 0;
+      el.textContent = actual > 0 ? sym() + actual.toFixed(2) : '—';
+
+      // Color the row based on over/under (compare in display currency)
+      var row = el.closest('.budget-row');
+      var est = parseFloat(row.getAttribute('data-estimated')) || 0;
+      var cur = row.getAttribute('data-item-currency') || 'EUR';
+      var estDisplay = toDisplay(est, cur);
+      row.classList.remove('over-budget', 'under-budget');
+      if (actual > 0 && actual > estDisplay) row.classList.add('over-budget');
+      else if (actual > 0 && actual <= estDisplay) row.classList.add('under-budget');
+    });
+
+    // Render unassigned expenses as dynamic rows in their category
+    var unassignedByCat = {};
+    expenses.forEach(function(e) {
+      if (!e.itemId) {
+        if (!unassignedByCat[e.category]) unassignedByCat[e.category] = [];
+        unassignedByCat[e.category].push(e);
+      }
+    });
+
+    document.querySelectorAll('.budget-expenses-dynamic').forEach(function(container) {
+      var catId = container.getAttribute('data-cat-expenses');
+      var catExpenses = unassignedByCat[catId] || [];
+      if (catExpenses.length === 0) {
+        container.innerHTML = '';
+        return;
+      }
+      var html = '';
+      catExpenses.forEach(function(exp) {
+        var cur = exp.currency || 'EUR';
+        html += '<div class="budget-row budget-row-dynamic">';
+        html += '<div class="budget-item-info">';
+        html += '<span class="budget-label">' + escapeHtml(exp.description) + '</span>';
+        var meta = [];
+        if (exp.city) meta.push(exp.city);
+        if (exp.date) meta.push(exp.date);
+        if (meta.length) html += '<span class="budget-note">' + meta.join(' · ') + '</span>';
+        html += '</div>';
+        html += '<div class="budget-amounts">';
+        html += '<div class="amount-group">';
+        html += '<span class="amount-label">Estimated</span>';
+        html += '<span class="amount-value">—</span>';
+        html += '</div>';
+        html += '<div class="amount-group">';
+        html += '<span class="amount-label">Actual</span>';
+        html += '<span class="amount-value">' + fmtAmount(exp.amount, cur) + '</span>';
+        html += '</div>';
+        html += '</div>';
+        html += '</div>';
+      });
+      container.innerHTML = html;
+    });
+
+    // Update category totals (estimated + actual in display currency)
+    var catEstTotals = {};
+    BUDGET_DATA.forEach(function(cat) {
+      catEstTotals[cat.id] = 0;
+      cat.items.forEach(function(item) {
+        catEstTotals[cat.id] += toDisplay(item.estimated, item.currency);
+      });
+    });
+
+    document.querySelectorAll('.category-estimated').forEach(function(el) {
+      var catId = el.getAttribute('data-cat-id');
+      var est = catEstTotals[catId] || 0;
+      el.textContent = 'Est: ' + sym() + Math.round(est).toLocaleString();
+    });
+
+    document.querySelectorAll('.category-actual').forEach(function(el) {
+      var catId = el.getAttribute('data-cat-actual');
+      var actual = expenseByCat[catId] || 0;
+      el.textContent = 'Actual: ' + sym() + actual.toFixed(2);
+
+      var catEst = catEstTotals[catId] || 0;
+      el.classList.remove('over', 'under');
+      if (actual > 0 && actual > catEst) el.classList.add('over');
+      else if (actual > 0 && actual <= catEst) el.classList.add('under');
+    });
+
+    var grandActual = totalActual;
+
+    // Update summary cards
+    var elEst = document.getElementById('total-estimated');
+    var elAct = document.getElementById('total-actual');
+    var elRem = document.getElementById('total-remaining');
+    var elProg = document.getElementById('budget-progress');
+    var elProgText = document.getElementById('budget-progress-text');
+
+    if (elEst) elEst.textContent = sym() + Math.round(totalEstimated).toLocaleString();
+    if (elAct) elAct.textContent = sym() + Math.round(grandActual).toLocaleString();
+
+    var remaining = totalEstimated - grandActual;
+    if (elRem) {
+      elRem.textContent = sym() + Math.abs(Math.round(remaining)).toLocaleString();
+      if (remaining < 0) {
+        elRem.textContent = '-' + sym() + Math.abs(Math.round(remaining)).toLocaleString();
+        elRem.classList.add('over');
+      } else {
+        elRem.classList.remove('over');
+      }
+    }
+
+    var pct = totalEstimated > 0 ? Math.min(Math.round((grandActual / totalEstimated) * 100), 100) : 0;
+    if (elProg) {
+      elProg.style.width = pct + '%';
+      if (grandActual > totalEstimated) {
+        elProg.classList.add('over');
+      } else {
+        elProg.classList.remove('over');
+      }
+    }
+    if (elProgText) elProgText.textContent = pct + '% of budget spent';
+
+    // Update charts (all in display currency)
+    renderCharts(expenseByCat, expenses);
+  }
+
+  var chartInstances = {};
+
+  function renderCharts(expenseByCat, expenses) {
+    if (typeof Chart === 'undefined') return;
+
+    var catLabels = BUDGET_DATA.map(function(c) { return c.title; });
+    var catEstimates = BUDGET_DATA.map(function(c) {
+      var total = 0;
+      c.items.forEach(function(item) { total += toDisplay(item.estimated, item.currency); });
+      return total;
+    });
+    var catActuals = BUDGET_DATA.map(function(c) { return expenseByCat[c.id] || 0; });
+
+    var chartColors = [
+      '#006B3F', '#C62D2D', '#D4A629', '#1B3A6B',
+      '#B5560A', '#7B2D8E', '#2D6A4F', '#C9981A',
+      '#5C5550', '#3A7CA5'
+    ];
+
+    var fontFamily = "'Jost', system-ui, sans-serif";
+
+    var defaultOptions = {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          labels: { font: { family: fontFamily, size: 12 }, padding: 12 }
+        }
+      }
+    };
+
+    // --- Estimated vs Actual bar chart ---
+    var ctx1 = document.getElementById('chart-est-vs-actual');
+    if (ctx1) {
+      if (chartInstances.estVsActual) chartInstances.estVsActual.destroy();
+      chartInstances.estVsActual = new Chart(ctx1, {
+        type: 'bar',
+        data: {
+          labels: catLabels,
+          datasets: [
+            {
+              label: 'Estimated',
+              data: catEstimates,
+              backgroundColor: 'rgba(0, 107, 63, 0.25)',
+              borderColor: '#006B3F',
+              borderWidth: 1
+            },
+            {
+              label: 'Actual',
+              data: catActuals,
+              backgroundColor: 'rgba(198, 45, 45, 0.25)',
+              borderColor: '#C62D2D',
+              borderWidth: 1
+            }
+          ]
+        },
+        options: Object.assign({}, defaultOptions, {
+          indexAxis: 'y',
+          plugins: {
+            legend: defaultOptions.plugins.legend,
+            tooltip: {
+              callbacks: {
+                label: function(ctx) {
+                  return ctx.dataset.label + ': ' + sym() + ctx.parsed.x.toFixed(2);
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              ticks: {
+                callback: function(v) { return sym() + v; },
+                font: { family: fontFamily, size: 11 }
+              },
+              grid: { color: 'rgba(0,0,0,0.05)' }
+            },
+            y: {
+              ticks: { font: { family: fontFamily, size: 11 } },
+              grid: { display: false }
+            }
+          }
+        })
+      });
+    }
+
+    // --- Spending by category doughnut ---
+    var ctx2 = document.getElementById('chart-by-category');
+    if (ctx2) {
+      var catSpendLabels = [];
+      var catSpendValues = [];
+      var catSpendColors = [];
+      BUDGET_DATA.forEach(function(c, i) {
+        var val = expenseByCat[c.id] || 0;
+        if (val > 0) {
+          catSpendLabels.push(c.title);
+          catSpendValues.push(val);
+          catSpendColors.push(chartColors[i % chartColors.length]);
+        }
+      });
+
+      if (chartInstances.byCategory) chartInstances.byCategory.destroy();
+
+      if (catSpendValues.length === 0) {
+        chartInstances.byCategory = null;
+        ctx2.parentElement.innerHTML = '<canvas id="chart-by-category"></canvas><p class="chart-empty">No expenses logged yet</p>';
+      } else {
+        chartInstances.byCategory = new Chart(ctx2, {
+          type: 'doughnut',
+          data: {
+            labels: catSpendLabels,
+            datasets: [{
+              data: catSpendValues,
+              backgroundColor: catSpendColors,
+              borderWidth: 2,
+              borderColor: '#FAF7F2'
+            }]
+          },
+          options: Object.assign({}, defaultOptions, {
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: { font: { family: fontFamily, size: 11 }, padding: 10, usePointStyle: true }
+              },
+              tooltip: {
+                callbacks: {
+                  label: function(ctx) {
+                    var total = ctx.dataset.data.reduce(function(a, b) { return a + b; }, 0);
+                    var pct = Math.round((ctx.parsed / total) * 100);
+                    return ctx.label + ': ' + sym() + ctx.parsed.toFixed(2) + ' (' + pct + '%)';
+                  }
+                }
+              }
+            }
+          })
+        });
+      }
+    }
+
+    // --- Spending by city doughnut ---
+    var ctx3 = document.getElementById('chart-by-city');
+    if (ctx3) {
+      var cityTotals = { Porto: 0, Lisbon: 0, Aveiro: 0 };
+      var otherTotal = 0;
+      expenses.forEach(function(e) {
+        var amt = toDisplay(e.amount || 0, e.currency || 'EUR');
+        if (e.city && cityTotals.hasOwnProperty(e.city)) {
+          cityTotals[e.city] += amt;
+        } else {
+          otherTotal += amt;
+        }
+      });
+
+      var cityLabels = [];
+      var cityValues = [];
+      var cityColors = ['#1B3A6B', '#2D6A4F', '#B5560A', '#9E9890'];
+      if (cityTotals.Porto > 0) { cityLabels.push('Porto'); cityValues.push(cityTotals.Porto); }
+      if (cityTotals.Lisbon > 0) { cityLabels.push('Lisbon'); cityValues.push(cityTotals.Lisbon); }
+      if (cityTotals.Aveiro > 0) { cityLabels.push('Aveiro'); cityValues.push(cityTotals.Aveiro); }
+      if (otherTotal > 0) { cityLabels.push('Other'); cityValues.push(otherTotal); }
+
+      if (chartInstances.byCity) chartInstances.byCity.destroy();
+
+      if (cityValues.length === 0) {
+        chartInstances.byCity = null;
+        ctx3.parentElement.innerHTML = '<canvas id="chart-by-city"></canvas><p class="chart-empty">No expenses logged yet</p>';
+      } else {
+        chartInstances.byCity = new Chart(ctx3, {
+          type: 'doughnut',
+          data: {
+            labels: cityLabels,
+            datasets: [{
+              data: cityValues,
+              backgroundColor: cityColors.slice(0, cityLabels.length),
+              borderWidth: 2,
+              borderColor: '#FAF7F2'
+            }]
+          },
+          options: Object.assign({}, defaultOptions, {
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: { font: { family: fontFamily, size: 11 }, padding: 10, usePointStyle: true }
+              },
+              tooltip: {
+                callbacks: {
+                  label: function(ctx) {
+                    var total = ctx.dataset.data.reduce(function(a, b) { return a + b; }, 0);
+                    var pct = Math.round((ctx.parsed / total) * 100);
+                    return ctx.label + ': ' + sym() + ctx.parsed.toFixed(2) + ' (' + pct + '%)';
+                  }
+                }
+              }
+            }
+          })
+        });
+      }
+    }
+  }
+
+  function populateItemSelect(categoryId) {
+    var itemSelect = document.getElementById('expense-item');
+    if (!itemSelect) return;
+    itemSelect.innerHTML = '<option value="">— Any —</option>';
+    var cat = BUDGET_DATA.find(function(c) { return c.id === categoryId; });
+    if (cat) {
+      cat.items.forEach(function(item) {
+        var opt = document.createElement('option');
+        opt.value = item.id;
+        opt.textContent = item.label;
+        itemSelect.appendChild(opt);
+      });
+    }
+  }
+
+  function renderExpenses() {
+    var expenses = loadExpenses();
+    var list = document.getElementById('expense-list');
+    if (!list) return;
+
+    if (expenses.length === 0) {
+      list.innerHTML = '<p class="no-expenses">No expenses logged yet. Use the form above to start tracking.</p>';
+      return;
+    }
+
+    // Sort by date descending
+    expenses.sort(function(a, b) { return b.date.localeCompare(a.date); });
+
+    var html = '';
+    expenses.forEach(function(exp) {
+      html += '<div class="expense-entry" data-expense-id="' + exp.id + '">';
+      html += '<div class="expense-info">';
+      html += '<span class="expense-desc">' + escapeHtml(exp.description) + '</span>';
+      html += '<span class="expense-meta">';
+      if (exp.city) html += exp.city + ' · ';
+      html += exp.category;
+      if (exp.itemId) html += ' · ' + escapeHtml(exp.itemLabel || exp.itemId);
+      html += ' · ' + exp.date;
+      html += '</span>';
+      html += '</div>';
+      html += '<div class="expense-right">';
+      html += '<span class="expense-amount">' + (exp.currency === 'CAD' ? '$' : '€') + exp.amount.toFixed(2) + '</span>';
+      html += '<button class="btn-edit" data-edit-id="' + exp.id + '" title="Edit">&#9998;</button>';
+      html += '<button class="btn-delete" data-del-id="' + exp.id + '" title="Remove">×</button>';
+      html += '</div>';
+      html += '</div>';
+    });
+
+    list.innerHTML = html;
+
+    // Highlight the row being edited
+    if (editingId) {
+      var editRow = list.querySelector('[data-expense-id="' + editingId + '"]');
+      if (editRow) editRow.classList.add('editing');
+    }
+
+    // Attach edit handlers
+    list.querySelectorAll('.btn-edit').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var id = btn.getAttribute('data-edit-id');
+        startEditing(id);
+      });
+    });
+
+    // Attach delete handlers
+    list.querySelectorAll('.btn-delete').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var id = btn.getAttribute('data-del-id');
+        var exps = loadExpenses().filter(function(e) { return e.id !== id; });
+        saveExpenses(exps);
+        if (editingId === id) cancelEditing();
+        renderExpenses();
+        updateTotals();
+      });
+    });
+  }
+
+  function startEditing(id) {
+    var expenses = loadExpenses();
+    var exp = expenses.find(function(e) { return e.id === id; });
+    if (!exp) return;
+
+    editingId = id;
+
+    // Populate form
+    document.getElementById('expense-desc').value = exp.description;
+    document.getElementById('expense-amount').value = exp.amount;
+    var catSelect = document.getElementById('expense-category');
+    catSelect.value = exp.category;
+    populateItemSelect(exp.category);
+    var itemSelect = document.getElementById('expense-item');
+    if (itemSelect) itemSelect.value = exp.itemId || '';
+    document.getElementById('expense-currency').value = exp.currency || 'EUR';
+    document.getElementById('expense-city').value = exp.city || '';
+    document.getElementById('expense-date').value = exp.date || '';
+
+    // Switch button to update mode
+    var btnSubmit = document.getElementById('btn-submit');
+    var btnCancel = document.getElementById('btn-cancel');
+    btnSubmit.textContent = 'Update Expense';
+    btnCancel.style.display = '';
+
+    // Scroll to form
+    document.getElementById('expense-log').scrollIntoView({ behavior: 'smooth' });
+
+    // Re-render to show editing highlight
+    renderExpenses();
+  }
+
+  function cancelEditing() {
+    editingId = null;
+    document.getElementById('expense-desc').value = '';
+    document.getElementById('expense-amount').value = '';
+    document.getElementById('expense-date').value = new Date().toISOString().split('T')[0];
+    var itemSelect = document.getElementById('expense-item');
+    if (itemSelect) itemSelect.value = '';
+    document.getElementById('expense-city').value = '';
+
+    var btnSubmit = document.getElementById('btn-submit');
+    var btnCancel = document.getElementById('btn-cancel');
+    btnSubmit.textContent = 'Add Expense';
+    btnCancel.style.display = 'none';
+
+    renderExpenses();
+  }
+
+  function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function updateCurrencyUI() {
+    document.querySelectorAll('.currency-btn').forEach(function(btn) {
+      btn.classList.toggle('active', btn.getAttribute('data-currency') === displayCurrency);
+    });
+    document.getElementById('exchange-rate').value = exchangeRate;
+  }
+
+  function init() {
+    // Currency toggle
+    document.querySelectorAll('.currency-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        displayCurrency = btn.getAttribute('data-currency');
+        localStorage.setItem(DISPLAY_KEY, displayCurrency);
+        updateCurrencyUI();
+        updateTotals();
+      });
+    });
+
+    // Exchange rate
+    var rateInput = document.getElementById('exchange-rate');
+    if (rateInput) {
+      rateInput.value = exchangeRate;
+      rateInput.addEventListener('input', function() {
+        var val = parseFloat(rateInput.value);
+        if (!isNaN(val) && val > 0) {
+          exchangeRate = val;
+          localStorage.setItem(RATE_KEY, val.toString());
+          updateTotals();
+        }
+      });
+    }
+
+    updateCurrencyUI();
+
+    // Populate item select based on initial category
+    var catSelect = document.getElementById('expense-category');
+    if (catSelect) {
+      populateItemSelect(catSelect.value);
+      catSelect.addEventListener('change', function() {
+        populateItemSelect(catSelect.value);
+      });
+    }
+
+    // Cancel button
+    var btnCancel = document.getElementById('btn-cancel');
+    if (btnCancel) {
+      btnCancel.addEventListener('click', function() {
+        cancelEditing();
+      });
+    }
+
+    // Expense form
+    var form = document.getElementById('expense-form');
+    if (form) {
+      // Set default date to today
+      var dateInput = document.getElementById('expense-date');
+      if (dateInput && !dateInput.value) {
+        dateInput.value = new Date().toISOString().split('T')[0];
+      }
+
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        var desc = document.getElementById('expense-desc').value.trim();
+        var amount = parseFloat(document.getElementById('expense-amount').value);
+        var category = document.getElementById('expense-category').value;
+        var itemSelect = document.getElementById('expense-item');
+        var itemId = itemSelect ? itemSelect.value : '';
+        var itemLabel = itemSelect && itemSelect.selectedIndex > 0 ? itemSelect.options[itemSelect.selectedIndex].text : '';
+        var currency = document.getElementById('expense-currency').value;
+        var city = document.getElementById('expense-city').value;
+        var date = document.getElementById('expense-date').value;
+
+        if (!desc || isNaN(amount) || amount <= 0) return;
+
+        var expenses = loadExpenses();
+
+        if (editingId) {
+          expenses = expenses.map(function(exp) {
+            if (exp.id === editingId) {
+              return {
+                id: exp.id,
+                description: desc,
+                amount: amount,
+                currency: currency,
+                category: category,
+                itemId: itemId,
+                itemLabel: itemLabel,
+                city: city,
+                date: date
+              };
+            }
+            return exp;
+          });
+          saveExpenses(expenses);
+          cancelEditing();
+        } else {
+          expenses.push({
+            id: Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
+            description: desc,
+            amount: amount,
+            currency: currency,
+            category: category,
+            itemId: itemId,
+            itemLabel: itemLabel,
+            city: city,
+            date: date
+          });
+          saveExpenses(expenses);
+
+          // Reset form
+          document.getElementById('expense-desc').value = '';
+          document.getElementById('expense-amount').value = '';
+        }
+
+        renderExpenses();
+        updateTotals();
+      });
+    }
+
+    renderExpenses();
+    updateTotals();
+
+    // Subnav active state based on scroll
+    var sections = ['pre-trip', 'during-trip', 'expense-log', 'expense-details', 'charts'];
+    var subnavLinks = document.querySelectorAll('.subnav-link');
+    function updateSubnav() {
+      var scrollY = window.scrollY + 130;
+      var active = '';
+      sections.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el && el.offsetTop <= scrollY) active = id;
+      });
+      subnavLinks.forEach(function(link) {
+        if (link.getAttribute('href') === '#' + active) {
+          link.classList.add('active');
+        } else {
+          link.classList.remove('active');
+        }
+      });
+    }
+    window.addEventListener('scroll', updateSubnav, { passive: true });
+    updateSubnav();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+
+<style>
+  .budget-hero {
+    padding: 4rem 2rem 3rem;
+    text-align: center;
+    border-bottom: 1px solid var(--cream-dark);
+  }
+  .budget-hero-inner { max-width: 700px; margin: 0 auto; }
+  /* Sub-navigation */
+  .budget-subnav {
+    position: sticky;
+    top: 60px;
+    z-index: 90;
+    background: rgba(248, 244, 238, 0.92);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--cream-dark);
+    padding: 0 2rem;
+  }
+  .subnav-inner {
+    max-width: 800px;
+    margin: 0 auto;
+    display: flex;
+    gap: 0.25rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .subnav-inner::-webkit-scrollbar { display: none; }
+  .subnav-link {
+    font-size: 0.78rem;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+    padding: 0.7rem 0.85rem;
+    color: var(--ink-muted);
+    border-bottom: 2px solid transparent;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .subnav-link:hover {
+    color: var(--ink);
+    border-bottom-color: var(--cream-dark);
+  }
+  .subnav-link.active {
+    color: var(--pt-green);
+    border-bottom-color: var(--pt-green);
+  }
+
+  /* Scroll offset for sticky nav + subnav */
+  :target {
+    scroll-margin-top: 110px;
+  }
+
+  .budget-eyebrow {
+    font-size: 0.75rem;
+    font-weight: 400;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--pt-green);
+    margin-bottom: 0.75rem;
+  }
+  .budget-title {
+    font-family: var(--font-display);
+    font-size: clamp(2.5rem, 8vw, 4.5rem);
+    font-weight: 300;
+    color: var(--ink);
+    line-height: 0.9;
+    margin-bottom: 1rem;
+    letter-spacing: -0.02em;
+  }
+  .budget-subtitle {
+    font-size: 1rem;
+    color: var(--ink-muted);
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+  }
+
+  /* Currency controls */
+  .currency-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+  }
+  .currency-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .currency-toggle-label {
+    font-size: 0.78rem;
+    color: var(--ink-faint);
+    margin-right: 0.25rem;
+  }
+  .currency-btn {
+    padding: 0.35rem 0.85rem;
+    border: 1px solid var(--cream-dark);
+    border-radius: 20px;
+    background: white;
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--ink-muted);
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+  }
+  .currency-btn:hover { border-color: var(--ink-faint); }
+  .currency-btn.active {
+    background: var(--pt-green);
+    color: white;
+    border-color: var(--pt-green);
+  }
+  .exchange-rate-group {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    color: var(--ink-muted);
+  }
+  .exchange-rate-group label {
+    font-weight: 400;
+  }
+  .exchange-rate-group input {
+    width: 65px;
+    padding: 0.3rem 0.4rem;
+    border: 1px solid var(--cream-dark);
+    border-radius: var(--radius);
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    color: var(--ink);
+    text-align: center;
+    background: white;
+  }
+  .exchange-rate-group input:focus {
+    outline: none;
+    border-color: var(--pt-green);
+  }
+
+  /* Summary cards */
+  .budget-summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  .summary-card {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: 1.25rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+  .summary-label {
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .summary-value {
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    font-weight: 500;
+    color: var(--ink);
+  }
+  .summary-value.over { color: var(--pt-red); }
+
+  /* Progress bar */
+  .progress-container { max-width: 500px; margin: 0 auto; }
+  .progress-bar {
+    height: 8px;
+    background: var(--cream-dark);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 0.6rem;
+  }
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--pt-green);
+    border-radius: 4px;
+    transition: width 0.4s ease;
+  }
+  .progress-fill.over { background: var(--pt-red); }
+  .progress-text {
+    font-size: 0.8rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.03em;
+  }
+
+  /* Phase headers */
+  .phase-header {
+    padding: 2.5rem 2rem 1rem;
+    border-top: 2px solid var(--cream-dark);
+  }
+  .phase-title {
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    font-weight: 400;
+    color: var(--ink);
+    margin-bottom: 0.25rem;
+  }
+  .phase-subtitle {
+    font-size: 0.85rem;
+    color: var(--ink-faint);
+  }
+
+  /* Sections */
+  .section { padding: 2rem 2rem 2.5rem; }
+  .section-alt { background: white; }
+  .container { max-width: 800px; margin: 0 auto; }
+
+  /* Category header */
+  .category-header {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--cream-dark);
+  }
+  .category-emoji { font-size: 1.3rem; }
+  .category-title {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: var(--ink);
+    flex: 1;
+  }
+  .category-amounts {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+  .category-estimated {
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--ink-faint);
+    background: var(--cream-dark);
+    padding: 0.2rem 0.65rem;
+    border-radius: 20px;
+  }
+  .category-actual {
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--ink-faint);
+    background: var(--cream-dark);
+    padding: 0.2rem 0.65rem;
+    border-radius: 20px;
+    transition: background 0.2s, color 0.2s;
+  }
+  .category-actual.under {
+    color: var(--pt-green);
+    background: var(--green-light);
+  }
+  .category-actual.over {
+    color: var(--pt-red);
+    background: var(--terra-light);
+  }
+
+  /* Budget rows — use :global for styles that also apply to JS-injected rows */
+  .budget-items {
+    display: flex;
+    flex-direction: column;
+  }
+  :global(.budget-row) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.75rem 0.5rem;
+    border-bottom: 1px solid var(--cream-dark);
+    transition: background 0.15s;
+  }
+  :global(.budget-row:last-child) { border-bottom: none; }
+  :global(.budget-row:hover) { background: rgba(0,0,0,0.015); }
+  :global(.budget-row.over-budget) { background: rgba(198,45,45,0.04); }
+  :global(.budget-row.under-budget) { background: rgba(0,107,63,0.04); }
+  :global(.budget-row-dynamic) {
+    border-left: 3px solid var(--pt-yellow);
+    padding-left: calc(0.5rem + 3px);
+  }
+
+  :global(.budget-item-info) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    flex: 1;
+    min-width: 0;
+  }
+  :global(.budget-label) {
+    font-size: 0.9rem;
+    color: var(--ink);
+    line-height: 1.4;
+  }
+  :global(.budget-note) {
+    font-size: 0.78rem;
+    color: var(--ink-faint);
+    line-height: 1.4;
+  }
+
+  :global(.budget-amounts) {
+    display: flex;
+    gap: 1.25rem;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  :global(.amount-group) {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.1rem;
+  }
+  :global(.amount-label) {
+    font-size: 0.65rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  :global(.amount-value) {
+    font-size: 0.9rem;
+    font-weight: 400;
+    color: var(--ink-muted);
+  }
+
+  /* Expense form */
+  .expense-form {
+    background: white;
+    border: 1px solid var(--cream-dark);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .form-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  .form-row:last-of-type { margin-bottom: 1.25rem; }
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    flex: 1;
+  }
+  .form-group-small { flex: 0 0 130px; }
+  .form-group label {
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .form-group input,
+  .form-group select {
+    padding: 0.5rem 0.6rem;
+    border: 1px solid var(--cream-dark);
+    border-radius: var(--radius);
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    color: var(--ink);
+    background: var(--cream);
+  }
+  .form-group input:focus,
+  .form-group select:focus {
+    outline: none;
+    border-color: var(--pt-green);
+  }
+
+  .btn-add {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.6rem 1.5rem;
+    background: var(--pt-green);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-family: var(--font-body);
+    font-size: 0.82rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-add:hover { background: #005a34; }
+
+  .form-actions {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+  }
+  .btn-cancel {
+    padding: 0.6rem 1.5rem;
+    background: none;
+    color: var(--ink-muted);
+    border: 1px solid var(--cream-dark);
+    border-radius: var(--radius);
+    font-family: var(--font-body);
+    font-size: 0.82rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .btn-cancel:hover { color: var(--ink); border-color: var(--ink-faint); }
+
+  /* Expense list */
+  /* Expense details — :global because these are rendered by JS */
+  :global(.expense-list) { margin-bottom: 1rem; }
+  :global(.no-expenses) {
+    text-align: center;
+    color: var(--ink-faint);
+    font-size: 0.85rem;
+    padding: 2rem;
+  }
+  :global(.expense-entry) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.65rem 0.75rem;
+    border-bottom: 1px solid var(--cream-dark);
+    background: white;
+    border-radius: var(--radius);
+    margin-bottom: 0.35rem;
+  }
+  :global(.expense-entry:last-child) { margin-bottom: 0; }
+  :global(.expense-info) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    flex: 1;
+    min-width: 0;
+  }
+  :global(.expense-desc) {
+    font-size: 0.88rem;
+    color: var(--ink);
+  }
+  :global(.expense-meta) {
+    font-size: 0.75rem;
+    color: var(--ink-faint);
+  }
+  :global(.expense-right) {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-shrink: 0;
+  }
+  :global(.expense-amount) {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--ink);
+  }
+  :global(.btn-edit) {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: 1px solid var(--cream-dark);
+    border-radius: var(--radius);
+    color: var(--ink-faint);
+    cursor: pointer;
+    font-size: 0.85rem;
+    line-height: 1;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  :global(.btn-edit:hover) { color: var(--pt-green); border-color: var(--pt-green); }
+  :global(.expense-entry.editing) {
+    border-left: 3px solid var(--pt-green);
+    background: var(--green-light);
+  }
+  :global(.btn-delete) {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: 1px solid var(--cream-dark);
+    border-radius: var(--radius);
+    color: var(--ink-faint);
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  :global(.btn-delete:hover) { color: var(--pt-red); border-color: var(--pt-red); }
+
+  .expense-details-title {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--cream-dark);
+  }
+
+  .expense-total {
+    text-align: right;
+    font-size: 0.9rem;
+    color: var(--ink-muted);
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--cream-dark);
+  }
+
+  /* Charts */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  .chart-card {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    border: 1px solid var(--cream-dark);
+  }
+  .chart-title {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+  .chart-wrapper {
+    position: relative;
+    height: 300px;
+  }
+  .chart-wrapper-bar {
+    height: 380px;
+  }
+  :global(.chart-empty) {
+    text-align: center;
+    color: var(--ink-faint);
+    font-size: 0.85rem;
+    padding: 3rem 1rem;
+  }
+
+  @media (min-width: 700px) {
+    .charts-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+    .chart-card:first-child {
+      grid-column: 1 / -1;
+    }
+  }
+
+  /* Floating action button */
+  .fab {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 150;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--pt-green);
+    color: white;
+    font-size: 1.75rem;
+    font-weight: 300;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    transition: background 0.2s, transform 0.15s;
+    line-height: 1;
+  }
+  .fab:hover {
+    background: #005a34;
+    transform: scale(1.08);
+  }
+
+  /* Footer */
+  footer { border-top: 1px solid var(--cream-dark); padding: 2rem; }
+  .footer-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    text-align: center;
+  }
+  .footer-text { font-family: var(--font-display); font-size: 1rem; color: var(--ink-muted); }
+  .footer-sub { font-size: 0.75rem; color: var(--ink-faint); }
+
+  @media (max-width: 600px) {
+    .budget-hero { padding: 3rem 1.5rem 2rem; }
+    .budget-summary { grid-template-columns: 1fr; gap: 0.75rem; }
+    .summary-card { flex-direction: row; justify-content: space-between; align-items: center; }
+    .budget-subnav { padding: 0 1rem; }
+    .subnav-link { padding: 0.6rem 0.65rem; font-size: 0.72rem; }
+    .section { padding: 1.5rem 1.25rem 2rem; }
+    .budget-row {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+    .budget-amounts { width: 100%; justify-content: space-between; }
+    .form-row { flex-direction: column; gap: 0.75rem; }
+    .form-group-small { flex: 1; }
+    .phase-header { padding: 2rem 1.25rem 0.75rem; }
+  }
+</style>

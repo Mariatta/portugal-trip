@@ -1,0 +1,573 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Nav from '../components/Nav.astro';
+import { budgetData } from '../data/budget';
+---
+
+<Layout title="Log Expense" description="Quickly log an expense during your Portugal trip">
+  <Nav active="log" />
+
+  <header class="log-hero">
+    <div class="log-hero-inner">
+      <h1 class="log-title">Log Expense</h1>
+      <p class="log-subtitle">Quick entry for on-the-go tracking. All amounts in EUR.</p>
+      <p class="log-total">Total spent: <strong id="running-total">€0</strong></p>
+    </div>
+  </header>
+
+  <main>
+    <section class="section">
+      <div class="container">
+        <form id="expense-form" class="expense-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="expense-desc">Description</label>
+              <input type="text" id="expense-desc" placeholder="e.g. Lunch at Café Majestic" required />
+            </div>
+            <div class="form-group form-group-small">
+              <label for="expense-amount">Amount</label>
+              <input type="number" id="expense-amount" placeholder="0.00" min="0" step="0.01" required />
+            </div>
+            <div class="form-group form-group-small">
+              <label for="expense-currency">Currency</label>
+              <select id="expense-currency">
+                <option value="EUR">EUR €</option>
+                <option value="CAD">CAD $</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="expense-category">Category</label>
+              <select id="expense-category">
+                {budgetData.map(cat => (
+                  <option value={cat.id}>{cat.emoji} {cat.title}</option>
+                ))}
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="expense-item">Budget Item</label>
+              <select id="expense-item">
+                <option value="">— Any —</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group form-group-small">
+              <label for="expense-city">City</label>
+              <select id="expense-city">
+                <option value="">—</option>
+                <option value="Porto">Porto</option>
+                <option value="Lisbon">Lisbon</option>
+                <option value="Aveiro">Aveiro</option>
+              </select>
+            </div>
+            <div class="form-group form-group-small">
+              <label for="expense-date">Date</label>
+              <input type="date" id="expense-date" />
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-add" id="btn-submit">Add Expense</button>
+            <button type="button" class="btn-cancel" id="btn-cancel" style="display:none;">Cancel</button>
+          </div>
+        </form>
+
+        <div class="recent-header">
+          <h2 class="recent-title">Recent Expenses</h2>
+          <a href={`${Astro.props ? '' : ''}${import.meta.env.BASE_URL}budget/#expense-details`} class="link-budget">View full budget →</a>
+        </div>
+        <div id="expense-list" class="expense-list"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container footer-inner">
+      <p class="footer-text">🇵🇹 Portugal Trip for Mariatta's Family · August 2026</p>
+      <p class="footer-sub">Built with Astro · Hosted on <a href="https://github.com/Mariatta/portugal-trip" target="_blank" rel="noopener">GitHub Pages</a></p>
+    </div>
+  </footer>
+</Layout>
+
+<script is:inline define:vars={{ budgetDataJSON: JSON.stringify(budgetData.map(c => ({ id: c.id, title: c.title, emoji: c.emoji, items: c.items.map(i => ({ id: i.id, label: i.label })) }))) }}>
+(function() {
+  var EXPENSES_KEY = 'portugal-budget-expenses-2026';
+  var BUDGET_DATA = JSON.parse(budgetDataJSON);
+  var RATE_KEY = 'portugal-budget-rate-2026';
+  var DISPLAY_KEY = 'portugal-budget-display-currency';
+  var editingId = null;
+
+  function getDisplayCurrency() { return localStorage.getItem(DISPLAY_KEY) || 'CAD'; }
+  function getRate() { return parseFloat(localStorage.getItem(RATE_KEY)) || 1.53; }
+
+  function loadExpenses() {
+    try { return JSON.parse(localStorage.getItem(EXPENSES_KEY) || '[]'); }
+    catch { return []; }
+  }
+
+  function saveExpenses(data) {
+    localStorage.setItem(EXPENSES_KEY, JSON.stringify(data));
+  }
+
+  function updateTotal() {
+    var expenses = loadExpenses();
+    var dc = getDisplayCurrency();
+    var rate = getRate();
+    var total = expenses.reduce(function(sum, e) {
+      var amt = e.amount || 0;
+      var cur = e.currency || 'EUR';
+      if (cur === dc) return sum + amt;
+      if (dc === 'CAD') return sum + amt * rate;
+      return sum + amt / rate;
+    }, 0);
+    var s = dc === 'CAD' ? '$' : '€';
+    var el = document.getElementById('running-total');
+    if (el) el.textContent = s + total.toFixed(2);
+  }
+
+  function populateItemSelect(categoryId) {
+    var itemSelect = document.getElementById('expense-item');
+    if (!itemSelect) return;
+    itemSelect.innerHTML = '<option value="">— Any —</option>';
+    var cat = BUDGET_DATA.find(function(c) { return c.id === categoryId; });
+    if (cat) {
+      cat.items.forEach(function(item) {
+        var opt = document.createElement('option');
+        opt.value = item.id;
+        opt.textContent = item.label;
+        itemSelect.appendChild(opt);
+      });
+    }
+  }
+
+  function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function renderExpenses() {
+    var expenses = loadExpenses();
+    var list = document.getElementById('expense-list');
+    if (!list) return;
+
+    if (expenses.length === 0) {
+      list.innerHTML = '<p class="no-expenses">No expenses logged yet.</p>';
+      updateTotal();
+      return;
+    }
+
+    expenses.sort(function(a, b) { return b.date.localeCompare(a.date); });
+
+    // Show the 20 most recent
+    var recent = expenses.slice(0, 20);
+
+    var html = '';
+    recent.forEach(function(exp) {
+      html += '<div class="expense-entry' + (editingId === exp.id ? ' editing' : '') + '" data-expense-id="' + exp.id + '">';
+      html += '<div class="expense-info">';
+      html += '<span class="expense-desc">' + escapeHtml(exp.description) + '</span>';
+      html += '<span class="expense-meta">';
+      if (exp.city) html += exp.city + ' · ';
+      html += exp.category;
+      if (exp.itemId) html += ' · ' + escapeHtml(exp.itemLabel || exp.itemId);
+      html += ' · ' + exp.date;
+      html += '</span>';
+      html += '</div>';
+      html += '<div class="expense-right">';
+      html += '<span class="expense-amount">' + (exp.currency === 'CAD' ? '$' : '€') + exp.amount.toFixed(2) + '</span>';
+      html += '<button class="btn-edit" data-edit-id="' + exp.id + '" title="Edit">&#9998;</button>';
+      html += '<button class="btn-delete" data-del-id="' + exp.id + '" title="Remove">×</button>';
+      html += '</div>';
+      html += '</div>';
+    });
+
+    if (expenses.length > 20) {
+      html += '<p class="more-expenses">Showing 20 of ' + expenses.length + ' expenses. <a href="' + document.querySelector('.link-budget').getAttribute('href') + '">View all</a></p>';
+    }
+
+    list.innerHTML = html;
+
+    list.querySelectorAll('.btn-edit').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        startEditing(btn.getAttribute('data-edit-id'));
+      });
+    });
+
+    list.querySelectorAll('.btn-delete').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var id = btn.getAttribute('data-del-id');
+        var exps = loadExpenses().filter(function(e) { return e.id !== id; });
+        saveExpenses(exps);
+        if (editingId === id) cancelEditing();
+        renderExpenses();
+      });
+    });
+
+    updateTotal();
+  }
+
+  function startEditing(id) {
+    var expenses = loadExpenses();
+    var exp = expenses.find(function(e) { return e.id === id; });
+    if (!exp) return;
+
+    editingId = id;
+    document.getElementById('expense-desc').value = exp.description;
+    document.getElementById('expense-amount').value = exp.amount;
+    var catSelect = document.getElementById('expense-category');
+    catSelect.value = exp.category;
+    populateItemSelect(exp.category);
+    var itemSelect = document.getElementById('expense-item');
+    if (itemSelect) itemSelect.value = exp.itemId || '';
+    document.getElementById('expense-currency').value = exp.currency || 'EUR';
+    document.getElementById('expense-city').value = exp.city || '';
+    document.getElementById('expense-date').value = exp.date || '';
+
+    document.getElementById('btn-submit').textContent = 'Update Expense';
+    document.getElementById('btn-cancel').style.display = '';
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    renderExpenses();
+  }
+
+  function cancelEditing() {
+    editingId = null;
+    document.getElementById('expense-desc').value = '';
+    document.getElementById('expense-amount').value = '';
+    document.getElementById('expense-date').value = new Date().toISOString().split('T')[0];
+    var itemSelect = document.getElementById('expense-item');
+    if (itemSelect) itemSelect.value = '';
+    document.getElementById('expense-city').value = '';
+
+    document.getElementById('btn-submit').textContent = 'Add Expense';
+    document.getElementById('btn-cancel').style.display = 'none';
+
+    renderExpenses();
+  }
+
+  function init() {
+    var catSelect = document.getElementById('expense-category');
+    if (catSelect) {
+      populateItemSelect(catSelect.value);
+      catSelect.addEventListener('change', function() {
+        populateItemSelect(catSelect.value);
+      });
+    }
+
+    document.getElementById('btn-cancel').addEventListener('click', function() {
+      cancelEditing();
+    });
+
+    var form = document.getElementById('expense-form');
+    if (form) {
+      var dateInput = document.getElementById('expense-date');
+      if (dateInput && !dateInput.value) {
+        dateInput.value = new Date().toISOString().split('T')[0];
+      }
+
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        var desc = document.getElementById('expense-desc').value.trim();
+        var amount = parseFloat(document.getElementById('expense-amount').value);
+        var category = document.getElementById('expense-category').value;
+        var itemSelect = document.getElementById('expense-item');
+        var itemId = itemSelect ? itemSelect.value : '';
+        var itemLabel = itemSelect && itemSelect.selectedIndex > 0 ? itemSelect.options[itemSelect.selectedIndex].text : '';
+        var currency = document.getElementById('expense-currency').value;
+        var city = document.getElementById('expense-city').value;
+        var date = document.getElementById('expense-date').value;
+
+        if (!desc || isNaN(amount) || amount <= 0) return;
+
+        var expenses = loadExpenses();
+
+        if (editingId) {
+          expenses = expenses.map(function(exp) {
+            if (exp.id === editingId) {
+              return { id: exp.id, description: desc, amount: amount, currency: currency, category: category, itemId: itemId, itemLabel: itemLabel, city: city, date: date };
+            }
+            return exp;
+          });
+          saveExpenses(expenses);
+          cancelEditing();
+        } else {
+          expenses.push({
+            id: Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
+            description: desc, amount: amount, currency: currency, category: category, itemId: itemId, itemLabel: itemLabel, city: city, date: date
+          });
+          saveExpenses(expenses);
+          document.getElementById('expense-desc').value = '';
+          document.getElementById('expense-amount').value = '';
+          // Keep city and date for quick consecutive entries
+        }
+
+        renderExpenses();
+      });
+    }
+
+    renderExpenses();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+
+<style>
+  .log-hero {
+    padding: 3rem 2rem 2rem;
+    text-align: center;
+    border-bottom: 1px solid var(--cream-dark);
+  }
+  .log-hero-inner { max-width: 600px; margin: 0 auto; }
+  .log-title {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 7vw, 3.5rem);
+    font-weight: 300;
+    color: var(--ink);
+    line-height: 0.9;
+    margin-bottom: 0.75rem;
+    letter-spacing: -0.02em;
+  }
+  .log-subtitle {
+    font-size: 0.95rem;
+    color: var(--ink-muted);
+    margin-bottom: 1rem;
+  }
+  .log-total {
+    font-size: 1.1rem;
+    color: var(--ink-muted);
+  }
+  .log-total strong {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  .section { padding: 2rem; }
+  .container { max-width: 700px; margin: 0 auto; }
+
+  /* Form */
+  .expense-form {
+    background: white;
+    border: 1px solid var(--cream-dark);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  .form-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  .form-row:last-of-type { margin-bottom: 1.25rem; }
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    flex: 1;
+  }
+  .form-group-small { flex: 0 0 130px; }
+  .form-group label {
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .form-group input,
+  .form-group select {
+    padding: 0.5rem 0.6rem;
+    border: 1px solid var(--cream-dark);
+    border-radius: var(--radius);
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    color: var(--ink);
+    background: var(--cream);
+  }
+  .form-group input:focus,
+  .form-group select:focus {
+    outline: none;
+    border-color: var(--pt-green);
+  }
+
+  .form-actions {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+  }
+  .btn-add {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.6rem 1.5rem;
+    background: var(--pt-green);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-family: var(--font-body);
+    font-size: 0.82rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-add:hover { background: #005a34; }
+  .btn-cancel {
+    padding: 0.6rem 1.5rem;
+    background: none;
+    color: var(--ink-muted);
+    border: 1px solid var(--cream-dark);
+    border-radius: var(--radius);
+    font-family: var(--font-body);
+    font-size: 0.82rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .btn-cancel:hover { color: var(--ink); border-color: var(--ink-faint); }
+
+  /* Recent header */
+  .recent-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--cream-dark);
+  }
+  .recent-title {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 500;
+    color: var(--ink);
+  }
+  .link-budget {
+    font-size: 0.8rem;
+    color: var(--pt-green);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .link-budget:hover { color: var(--ink); }
+
+  /* Expense list — :global for JS-rendered content */
+  :global(.expense-list) { margin-bottom: 1rem; }
+  :global(.no-expenses) {
+    text-align: center;
+    color: var(--ink-faint);
+    font-size: 0.85rem;
+    padding: 2rem;
+  }
+  :global(.expense-entry) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.65rem 0.75rem;
+    border-bottom: 1px solid var(--cream-dark);
+    background: white;
+    border-radius: var(--radius);
+    margin-bottom: 0.35rem;
+  }
+  :global(.expense-entry:last-child) { margin-bottom: 0; }
+  :global(.expense-entry.editing) {
+    border-left: 3px solid var(--pt-green);
+    background: var(--green-light);
+  }
+  :global(.expense-info) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    flex: 1;
+    min-width: 0;
+  }
+  :global(.expense-desc) {
+    font-size: 0.88rem;
+    color: var(--ink);
+  }
+  :global(.expense-meta) {
+    font-size: 0.75rem;
+    color: var(--ink-faint);
+  }
+  :global(.expense-right) {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-shrink: 0;
+  }
+  :global(.expense-amount) {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--ink);
+  }
+  :global(.btn-edit) {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: 1px solid var(--cream-dark);
+    border-radius: var(--radius);
+    color: var(--ink-faint);
+    cursor: pointer;
+    font-size: 0.85rem;
+    line-height: 1;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  :global(.btn-edit:hover) { color: var(--pt-green); border-color: var(--pt-green); }
+  :global(.btn-delete) {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: 1px solid var(--cream-dark);
+    border-radius: var(--radius);
+    color: var(--ink-faint);
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  :global(.btn-delete:hover) { color: var(--pt-red); border-color: var(--pt-red); }
+  :global(.more-expenses) {
+    text-align: center;
+    font-size: 0.82rem;
+    color: var(--ink-faint);
+    padding: 0.75rem;
+  }
+  :global(.more-expenses a) {
+    color: var(--pt-green);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  /* Footer */
+  footer { border-top: 1px solid var(--cream-dark); padding: 2rem; }
+  .footer-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    text-align: center;
+  }
+  .footer-text { font-family: var(--font-display); font-size: 1rem; color: var(--ink-muted); }
+  .footer-sub { font-size: 0.75rem; color: var(--ink-faint); }
+
+  @media (max-width: 600px) {
+    .log-hero { padding: 2rem 1.5rem 1.5rem; }
+    .section { padding: 1.5rem 1.25rem; }
+    .form-row { flex-direction: column; gap: 0.75rem; }
+    .form-group-small { flex: 1; }
+    .recent-header { flex-direction: column; gap: 0.3rem; }
+  }
+</style>

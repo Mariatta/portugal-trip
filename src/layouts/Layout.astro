@@ -5,6 +5,9 @@ interface Props {
 }
 const { title, description = 'A family travel guide to Porto, Lisbon & Aveiro — August 2026' } = Astro.props;
 const base = import.meta.env.BASE_URL;
+const siteUrl = 'https://mariatta.github.io/portugal-trip';
+const fullTitle = `${title} — Portugal 2026`;
+const ogImage = `${siteUrl}/icon-512.svg`;
 ---
 <!doctype html>
 <html lang="en">
@@ -12,14 +15,72 @@ const base = import.meta.env.BASE_URL;
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content={description} />
-  <title>{title} — Portugal 2026</title>
+  <title>{fullTitle}</title>
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content={fullTitle} />
+  <meta property="og:description" content={description} />
+  <meta property="og:url" content={siteUrl} />
+  <meta property="og:image" content={ogImage} />
+  <meta property="og:site_name" content="Portugal 2026" />
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content={fullTitle} />
+  <meta name="twitter:description" content={description} />
+  <meta name="twitter:image" content={ogImage} />
   <link rel="icon" type="image/svg+xml" href={`${base}favicon.svg`} />
+  <link rel="manifest" href={`${base}manifest.json`} />
+  <meta name="theme-color" content="#1B3A6B" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Portugal 2026" />
+  <link rel="apple-touch-icon" href={`${base}icon-192.svg`} />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet" />
 </head>
 <body>
   <slot />
+
+  <!-- Update notification banner -->
+  <div id="update-banner" class="update-banner" style="display:none;">
+    <span>A new version is available</span>
+    <button id="update-btn" class="update-btn">Refresh</button>
+    <button id="update-dismiss" class="update-dismiss">×</button>
+  </div>
+
+  <!-- Service worker registration -->
+  <script is:inline>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('/portugal-trip/sw.js').then(function(reg) {
+        // Listen for updates from the service worker
+        navigator.serviceWorker.addEventListener('message', function(event) {
+          if (event.data && event.data.type === 'UPDATE_AVAILABLE') {
+            var banner = document.getElementById('update-banner');
+            if (banner) banner.style.display = 'flex';
+          }
+        });
+      });
+    });
+
+    // Refresh button
+    document.addEventListener('DOMContentLoaded', function() {
+      var btn = document.getElementById('update-btn');
+      if (btn) {
+        btn.addEventListener('click', function() {
+          window.location.reload();
+        });
+      }
+      var dismiss = document.getElementById('update-dismiss');
+      if (dismiss) {
+        dismiss.addEventListener('click', function() {
+          document.getElementById('update-banner').style.display = 'none';
+        });
+      }
+    });
+  }
+  </script>
 </body>
 </html>
 
@@ -139,6 +200,47 @@ const base = import.meta.env.BASE_URL;
     color: var(--pt-green);
     background: var(--green-light);
   }
+
+  /* Update banner */
+  .update-banner {
+    position: fixed;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 200;
+    background: var(--blue);
+    color: white;
+    padding: 0.6rem 1rem;
+    border-radius: var(--radius-lg);
+    font-size: 0.82rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    font-family: var(--font-body);
+  }
+  .update-btn {
+    background: white;
+    color: var(--blue);
+    border: none;
+    padding: 0.3rem 0.8rem;
+    border-radius: var(--radius);
+    font-family: var(--font-body);
+    font-size: 0.78rem;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .update-btn:hover { opacity: 0.9; }
+  .update-dismiss {
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.6);
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 0 0.2rem;
+    line-height: 1;
+  }
+  .update-dismiss:hover { color: white; }
 
   /* Responsive nav */
   @media (max-width: 600px) {

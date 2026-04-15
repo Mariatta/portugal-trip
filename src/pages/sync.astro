@@ -1,0 +1,345 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Nav from '../components/Nav.astro';
+---
+
+<Layout title="Import / Export" description="Sync your Portugal trip expense data between devices">
+  <Nav active="sync" />
+
+  <header class="sync-hero">
+    <div class="sync-hero-inner">
+      <p class="sync-eyebrow">Data Sync</p>
+      <h1 class="sync-page-title">Import / Export</h1>
+      <p class="sync-subtitle">Sync your expense data between devices. Export from one device, import on another.</p>
+    </div>
+  </header>
+
+  <main>
+    <section class="section">
+      <div class="container">
+        <div class="sync-grid">
+          <div class="sync-card">
+            <h2 class="sync-title">Export</h2>
+            <p class="sync-desc">Download your expense data as a JSON file. Transfer it to another device to import.</p>
+            <div class="sync-actions">
+              <button type="button" class="btn-primary" id="btn-export">Export Data</button>
+              <button type="button" class="btn-outline" id="btn-copy">Copy to Clipboard</button>
+            </div>
+          </div>
+          <div class="sync-card">
+            <h2 class="sync-title">Import</h2>
+            <p class="sync-desc">Load expense data from a file or paste it below. You can choose to merge with or replace existing data.</p>
+            <div class="sync-import-options">
+              <label class="sync-file-label" for="import-file">
+                <span class="btn-primary btn-file">Choose File</span>
+                <input type="file" id="import-file" accept=".json" />
+              </label>
+              <span class="sync-or">or paste below</span>
+            </div>
+            <textarea id="import-text" class="sync-textarea" rows="6" placeholder="Paste exported JSON here..."></textarea>
+            <div class="sync-actions">
+              <button type="button" class="btn-primary" id="btn-import-merge">Merge with Existing</button>
+              <button type="button" class="btn-secondary" id="btn-import-replace">Replace All</button>
+            </div>
+            <p class="sync-status" id="sync-status"></p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container footer-inner">
+      <p class="footer-text">🇵🇹 Portugal Trip for Mariatta's Family · August 2026</p>
+      <p class="footer-sub">Built with Astro · Hosted on <a href="https://github.com/Mariatta/portugal-trip" target="_blank" rel="noopener">GitHub Pages</a></p>
+    </div>
+  </footer>
+</Layout>
+
+<script is:inline>
+(function() {
+  var EXPENSES_KEY = 'portugal-budget-expenses-2026';
+
+  function loadExpenses() {
+    try { return JSON.parse(localStorage.getItem(EXPENSES_KEY) || '[]'); }
+    catch { return []; }
+  }
+
+  function saveExpenses(data) {
+    localStorage.setItem(EXPENSES_KEY, JSON.stringify(data));
+  }
+
+  var statusEl = document.getElementById('sync-status');
+  function showStatus(msg, isError) {
+    if (!statusEl) return;
+    statusEl.textContent = msg;
+    statusEl.className = 'sync-status ' + (isError ? 'sync-error' : 'sync-success');
+    setTimeout(function() { statusEl.textContent = ''; statusEl.className = 'sync-status'; }, 4000);
+  }
+
+  function getExportData() {
+    return JSON.stringify({
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      expenses: loadExpenses()
+    }, null, 2);
+  }
+
+  document.getElementById('btn-export').addEventListener('click', function() {
+    var data = getExportData();
+    var blob = new Blob([data], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'portugal-budget-' + new Date().toISOString().split('T')[0] + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+  document.getElementById('btn-copy').addEventListener('click', function() {
+    var data = getExportData();
+    navigator.clipboard.writeText(data).then(function() {
+      showStatus('Copied to clipboard');
+    }, function() {
+      showStatus('Failed to copy — try Export instead', true);
+    });
+  });
+
+  function importData(jsonStr, mode) {
+    try {
+      var parsed = JSON.parse(jsonStr);
+      var incoming = parsed.expenses || parsed;
+      if (!Array.isArray(incoming)) {
+        showStatus('Invalid format — expected an array of expenses', true);
+        return;
+      }
+      for (var i = 0; i < incoming.length; i++) {
+        if (!incoming[i].description || typeof incoming[i].amount !== 'number') {
+          showStatus('Invalid expense at entry ' + (i + 1) + ' — missing description or amount', true);
+          return;
+        }
+      }
+
+      if (mode === 'replace') {
+        saveExpenses(incoming);
+        showStatus('Replaced all data with ' + incoming.length + ' expense(s)');
+      } else {
+        var existing = loadExpenses();
+        var existingIds = {};
+        existing.forEach(function(e) { existingIds[e.id] = true; });
+        var added = 0;
+        incoming.forEach(function(e) {
+          if (!existingIds[e.id]) {
+            existing.push(e);
+            added++;
+          }
+        });
+        saveExpenses(existing);
+        showStatus('Merged — ' + added + ' new expense(s) added, ' + (incoming.length - added) + ' duplicate(s) skipped');
+      }
+
+      document.getElementById('import-text').value = '';
+    } catch (err) {
+      showStatus('Invalid JSON — could not parse the data', true);
+    }
+  }
+
+  document.getElementById('btn-import-merge').addEventListener('click', function() {
+    var text = document.getElementById('import-text').value.trim();
+    if (!text) { showStatus('No data to import — paste JSON or choose a file', true); return; }
+    importData(text, 'merge');
+  });
+
+  document.getElementById('btn-import-replace').addEventListener('click', function() {
+    var text = document.getElementById('import-text').value.trim();
+    if (!text) { showStatus('No data to import — paste JSON or choose a file', true); return; }
+    if (!confirm('This will replace all existing expenses. Continue?')) return;
+    importData(text, 'replace');
+  });
+
+  document.getElementById('import-file').addEventListener('change', function(e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+      document.getElementById('import-text').value = ev.target.result;
+      showStatus('File loaded — click Merge or Replace to import');
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  });
+})();
+</script>
+
+<style>
+  .sync-hero {
+    padding: 4rem 2rem 3rem;
+    text-align: center;
+    border-bottom: 1px solid var(--cream-dark);
+  }
+  .sync-hero-inner { max-width: 600px; margin: 0 auto; }
+  .sync-eyebrow {
+    font-size: 0.75rem;
+    font-weight: 400;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--pt-green);
+    margin-bottom: 0.75rem;
+  }
+  .sync-page-title {
+    font-family: var(--font-display);
+    font-size: clamp(2.5rem, 8vw, 4.5rem);
+    font-weight: 300;
+    color: var(--ink);
+    line-height: 0.9;
+    margin-bottom: 1rem;
+    letter-spacing: -0.02em;
+  }
+  .sync-subtitle {
+    font-size: 1rem;
+    color: var(--ink-muted);
+    line-height: 1.6;
+  }
+
+  .section { padding: 3rem 2rem; }
+  .container { max-width: 800px; margin: 0 auto; }
+
+  .sync-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+  .sync-card {
+    background: white;
+    border: 1px solid var(--cream-dark);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+  }
+  .sync-title {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 0.5rem;
+  }
+  .sync-desc {
+    font-size: 0.85rem;
+    color: var(--ink-muted);
+    margin-bottom: 1.25rem;
+    line-height: 1.5;
+  }
+  .sync-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.6rem 1.5rem;
+    background: var(--pt-green);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-family: var(--font-body);
+    font-size: 0.82rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-primary:hover { background: #005a34; }
+  .btn-outline {
+    padding: 0.6rem 1.5rem;
+    background: none;
+    color: var(--pt-green);
+    border: 1px solid var(--pt-green);
+    border-radius: var(--radius);
+    font-family: var(--font-body);
+    font-size: 0.82rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+  }
+  .btn-outline:hover { background: var(--green-light); }
+  .btn-secondary {
+    padding: 0.6rem 1.5rem;
+    background: none;
+    color: var(--ink-muted);
+    border: 1px solid var(--cream-dark);
+    border-radius: var(--radius);
+    font-family: var(--font-body);
+    font-size: 0.82rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .btn-secondary:hover { color: var(--ink); border-color: var(--ink-faint); }
+
+  .sync-import-options {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+  .sync-file-label { cursor: pointer; }
+  .sync-file-label input[type="file"] {
+    position: absolute;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    overflow: hidden;
+  }
+  .btn-file { display: inline-block; cursor: pointer; }
+  .sync-or {
+    font-size: 0.8rem;
+    color: var(--ink-faint);
+  }
+  .sync-textarea {
+    width: 100%;
+    padding: 0.6rem;
+    border: 1px solid var(--cream-dark);
+    border-radius: var(--radius);
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    color: var(--ink);
+    background: var(--cream);
+    resize: vertical;
+    margin-bottom: 1rem;
+    line-height: 1.5;
+  }
+  .sync-textarea:focus {
+    outline: none;
+    border-color: var(--pt-green);
+  }
+  .sync-status {
+    font-size: 0.82rem;
+    margin-top: 0.75rem;
+    min-height: 1.2em;
+  }
+  .sync-success { color: var(--pt-green); }
+  .sync-error { color: var(--pt-red); }
+
+  /* Footer */
+  footer { border-top: 1px solid var(--cream-dark); padding: 2rem; }
+  .footer-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    text-align: center;
+  }
+  .footer-text { font-family: var(--font-display); font-size: 1rem; color: var(--ink-muted); }
+  .footer-sub { font-size: 0.75rem; color: var(--ink-faint); }
+
+  @media (max-width: 600px) {
+    .sync-hero { padding: 3rem 1.5rem 2rem; }
+    .section { padding: 2rem 1.25rem; }
+    .sync-grid { grid-template-columns: 1fr; }
+  }
+</style>

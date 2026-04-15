@@ -57,6 +57,31 @@ export interface MapPoint {
   lng: number;
 }
 
+export interface BudgetItem {
+  id: string;
+  label: string;
+  estimated: number;
+  currency: 'CAD' | 'EUR';
+  note?: string;
+}
+
+export interface BudgetCategory {
+  id: string;
+  title: string;
+  emoji: string;
+  type: 'pre-trip' | 'during-trip';
+  items: BudgetItem[];
+}
+
+export interface Expense {
+  id: string;
+  categoryId: string;
+  description: string;
+  amount: number;
+  date: string;
+  city?: 'Porto' | 'Lisbon' | 'Aveiro' | '';
+}
+
 export interface CityData {
   name: string;
   slug: string;
