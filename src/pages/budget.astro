@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
 import { budgetData } from '../data/budget';
 
 const preTripCategories = budgetData.filter(c => c.type === 'pre-trip');
@@ -257,12 +258,7 @@ const duringTripCategories = budgetData.filter(c => c.type === 'during-trip');
   <!-- Floating add button -->
   <a href={`${import.meta.env.BASE_URL}log/`} class="fab" title="Log an expense">+</a>
 
-  <footer>
-    <div class="container footer-inner">
-      <p class="footer-text">🇵🇹 Portugal Trip for Mariatta's Family · August 2026</p>
-      <p class="footer-sub">Built with Astro · Hosted on <a href="https://github.com/Mariatta/portugal-trip" target="_blank" rel="noopener">GitHub Pages</a></p>
-    </div>
-  </footer>
+  <Footer footerText="🇵🇹 Portugal Trip for Mariatta's Family · August 2026" repoUrl="https://github.com/Mariatta/portugal-trip" />
 </Layout>
 
 <script is:inline src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>

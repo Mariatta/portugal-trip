@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
 import { budgetData } from '../data/budget';
 ---
 
@@ -82,12 +83,7 @@ import { budgetData } from '../data/budget';
     </section>
   </main>
 
-  <footer>
-    <div class="container footer-inner">
-      <p class="footer-text">🇵🇹 Portugal Trip for Mariatta's Family · August 2026</p>
-      <p class="footer-sub">Built with Astro · Hosted on <a href="https://github.com/Mariatta/portugal-trip" target="_blank" rel="noopener">GitHub Pages</a></p>
-    </div>
-  </footer>
+  <Footer footerText="🇵🇹 Portugal Trip for Mariatta's Family · August 2026" repoUrl="https://github.com/Mariatta/portugal-trip" />
 </Layout>
 
 <script is:inline define:vars={{ budgetDataJSON: JSON.stringify(budgetData.map(c => ({ id: c.id, title: c.title, emoji: c.emoji, items: c.items.map(i => ({ id: i.id, label: i.label })) }))) }}>

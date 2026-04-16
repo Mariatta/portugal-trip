@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
 ---
 
 <Layout title="About" description="How this Portugal trip planner was built entirely with AI through conversational prompting">
@@ -211,6 +212,23 @@ import Nav from '../components/Nav.astro';
             <li><strong>Android (Chrome):</strong> Tap the browser menu, then "Install app" or "Add to Home Screen"</li>
           </ul>
 
+          <h2>Blog posts about this project</h2>
+          <p>
+            Mariatta has written about the process of building these trip planners with AI:
+          </p>
+          <ul class="blog-posts">
+            <li>
+              <a href="https://mariatta.ca/posts/travel-planning-with-ai/" target="_blank" rel="noopener">
+                Travel Planning with AI <span class="blog-part">— Part 1</span>
+              </a>
+            </li>
+            <li>
+              <a href="https://mariatta.ca/posts/travel-budgeting-without-spreadsheet/" target="_blank" rel="noopener">
+                Travel Budgeting Without a Spreadsheet <span class="blog-part">— Part 2</span>
+              </a>
+            </li>
+          </ul>
+
           <h2>Tools used</h2>
           <ul>
             <li><strong>Claude Code</strong> (Claude Opus 4.6) — AI coding assistant by Anthropic, used for all code generation, web research, and content writing</li>
@@ -224,12 +242,7 @@ import Nav from '../components/Nav.astro';
     </section>
   </main>
 
-  <footer>
-    <div class="container footer-inner">
-      <p class="footer-text">🇵🇹 Portugal Trip for Mariatta's Family · August 2026</p>
-      <p class="footer-sub">Built with Astro · Hosted on <a href="https://github.com/Mariatta/portugal-trip" target="_blank" rel="noopener">GitHub Pages</a></p>
-    </div>
-  </footer>
+  <Footer footerText="🇵🇹 Portugal Trip for Mariatta's Family · August 2026" repoUrl="https://github.com/Mariatta/portugal-trip" />
 </Layout>
 
 <style>
@@ -297,6 +310,7 @@ import Nav from '../components/Nav.astro';
     line-height: 1.75;
     margin-bottom: 0.4rem;
   }
+  .blog-part { color: var(--ink-faint); font-size: 0.9em; }
   .prose code {
     font-size: 0.85em;
     background: var(--cream-dark);
